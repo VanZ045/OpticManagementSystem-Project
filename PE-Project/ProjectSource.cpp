@@ -581,7 +581,7 @@ public:
 		helloMessage();
 		while (true) {
 			menu();
-			int input = getValidInteger(); // Returns 0 if 'q' or 'Q' is entered
+			int input = getValidInteger(); 
 			switch (input) {
 			case 1: {
 				// Add Vendor
