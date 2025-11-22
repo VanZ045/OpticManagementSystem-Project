@@ -126,8 +126,7 @@ public:
 	}
 
 	friend ostream& operator<<(ostream& os, const Order& order) {
-		os << "Order details:\n" <<
-			"\nOrder ID: " << order.orderID <<
+		os << "\nOrder ID: " << order.orderID <<
 			"\nVendor name: " << order.vendor.getName() << "\n" <<
 			"\nOrdered Optics:\n";
 		for (const auto& optic : order.orderedOptics) {
@@ -144,32 +143,11 @@ private:
 	vector<Vendor> vendors;
 	vector<Order> orders;
 
-	bool isNumberAdvanced(const string& s) {
+	bool isNumericOnly(const string& s) {
 		if (s.empty()) return false;
 		char* end = nullptr;
 		strtod(s.c_str(), &end);
 		return end != s.c_str() && *end == '\0';
-	}
-
-	int getValidInteger() {
-		string input;
-		while (true) {
-			getline(cin, input);
-			if (isNumber(input)) return stoi(input);
-			cout << "\nInvalid input. Please enter a positive integer: ";
-		}
-	}
-
-	bool checkForExit(const string& input) {
-		if (input == "0") { return true; }
-		return false;
-	}
-
-	void validateText(string& input) {
-		while (input.empty() || isNumberAdvanced(input)) {
-			cout << "\nInvalid input. Please enter a valid text: ";
-			getline(cin, input);
-		}
 	}
 
 	bool isNumber(const string& s) {
@@ -178,55 +156,99 @@ private:
 		return true;
 	}
 
-	void validateBulstat(string& bulstat)
-	{
-		while (!isNumber(bulstat) || bulstat.length() != 8) {
-			cout << "\nInvalid input. Please enter an eight digit business ID number: ";
+	string getValidBulstat() {
+		string bulstat;
+		while (true) {
 			getline(cin, bulstat);
+			if (checkForExit(bulstat)) { return ""; };
+			if (isNumber(bulstat) && bulstat.length() == 8) return bulstat;
+			cout << "\nInvalid input. Please enter an eight digit business ID number: ";
+		}
+	}
+	
+	string getValidPhoneNumber() {
+		string phoneNumber;
+		while (true) {
+			getline(cin, phoneNumber);
+			if (checkForExit(phoneNumber)) { return "";};
+			if (isNumber(phoneNumber) && phoneNumber.length() == 10) return phoneNumber;
+			cout << "\nInvalid input. Please enter a ten digit phone number: ";
 		}
 	}
 
-	void validatePhoneNumber(string& phoneNumber)
-	{
-		while (!isNumber(phoneNumber) || phoneNumber.length() != 10) {
-			cout << "\nInvalid input. Please enter a ten digit phone number: ";
-			getline(cin, phoneNumber);
+	double getValidDiopter() {
+		string input;
+		while (true) {
+			getline(cin, input);
+			if (checkForExit(input)){ return -1; }
+			if (isNumericOnly(input)) { return stod(input); };
+			cout << "\nInvalid input. Please enter a valid number: ";
 		}
 	}
+
+	int getValidInteger() {
+		string input;
+		while (true) {
+			getline(cin, input);
+			if (checkForExit(input)) { return 0; }
+			if (isNumber(input) && input!="0") return stoi(input);
+			cout << "\nInvalid input. Please enter a positive integer: ";
+		}
+	}
+
+	double getValidDouble() {
+		string input;
+		while (true) {
+			getline(cin, input);
+			if (checkForExit(input)){ return -1; }
+			if (isNumericOnly(input) && stod(input) > 0) { return stod(input); };
+			cout << "\nInvalid input. Please enter a valid number: ";
+		}
+	}
+
+	string getValidString() {
+		string input;
+		while (true) {
+			getline(cin, input);
+			if (checkForExit(input)){ return ""; }
+			if (!input.empty() && !isNumericOnly(input)) return input;
+			cout << "\nInvalid input. Please enter a valid text: ";
+		}
+	}	
+
+	bool checkForExit(const string& input) {
+		if (input == "q" || input == "Q") { return true; }
+		return false;
+	}
 public:
+	OpticSystem(vector<Vendor> vl, vector<Order> ol) : vendors(vl) , orders(ol) {}
 	OpticSystem() {}
 	
 	void addVendors(vector<Vendor>& vendors) {
 		cout << "\nEnter number of vendors: ";
 		int vendorNumber = getValidInteger();
 
-
 		for (int i = 0; i < vendorNumber; i++)
 		{
-			string bulstat, name, location, phoneNumber;
-			cout << "\nIf you want to return to the menu just type '0'!";
+			cout << "\nIf you want to return to the menu just type 'q'!";
 			cout << "\nVendor #" << i + 1 << "\n";
 			cout << "\n---------------------\n";
 
 			cout << "Business ID: ";
-			getline(cin, bulstat);
-			if (checkForExit(bulstat)) { return; }
-			validateBulstat(bulstat);
+			string bulstat = getValidBulstat();
+			if (bulstat == "") { return; }
 
 			cout << "Name: ";
-			getline(cin, name);
-			if (checkForExit(name)) { return; }
-			validateText(name);
+			string name = getValidString();
+			if (name == "") { return; }
 
 			cout << "Location: ";
-			getline(cin, location);
-			if (checkForExit(location)) { return; }
-			validateText(location);
+			string location = getValidString();
+			if (location == "") { return; }
 
 			cout << "Phone number: ";
-			getline(cin, phoneNumber);
-			if (checkForExit(phoneNumber)) { return; }
-			validatePhoneNumber(phoneNumber);
+			string phoneNumber = getValidPhoneNumber();
+			if (phoneNumber == "") { return; }
 
 			Vendor vendor(bulstat, name, location, phoneNumber);
 			vendors.push_back(vendor);
@@ -242,36 +264,32 @@ public:
 		}
 	}
 
-	void addOpticToVendor(vector<Vendor>& vendors) {
+	void addOpticToVendor(vector<Vendor>& vendors)    {
 
 		if (vendors.empty()) { cout << "\nYou need to add a vendor before choosing an optic!\n"; return; }
 
 		cout << "\nChoose a vendor to add an optic to: ";
-		cout << "\nIf you want to return to the menu just type '0'!";
 		viewVendors(vendors);
 
-		string businessID;
+		cout << "\nIf you want to return to the menu just type 'q'!";
 		cout << "\nEnter the desired vendor's Business ID: ";
-		getline(cin, businessID);
-		if (checkForExit(businessID)) { return; }
 
-		bool validBusinessID = false;
+		string businessID;
 		Vendor* vendorPtr = nullptr;
-		while (!validBusinessID) {
+		while (true) {
+			getline(cin, businessID);
+			if (checkForExit(businessID)) { return; }
+
 			for (auto& v : vendors) {
 				if (v.getBulstat() == businessID) {
-					validBusinessID = true;
 					vendorPtr = &v;
 					break;
 				}
 			}
 
-			if (!validBusinessID)
-			{
-				cout << "Invalid Business ID. Please enter a valid Business ID: ";
-				getline(cin, businessID);
-				if (checkForExit(businessID)) { return; }
-			}
+			if (vendorPtr!=nullptr){break;}
+
+			cout << "Invalid Business ID. Please enter a valid Business ID: ";
 		}
 		Vendor& vendor = *vendorPtr;
 
@@ -280,46 +298,28 @@ public:
 
 		for (int j = 0; j < opticsNumber; j++)
 		{
-			string type, materialName;
-			double thickness, diopter, price;
-
 			cout << "\nOptic #" << j + 1 << "\n";
 			cout << "\n---------------------\n";
 
 			cout << "Type: ";
-			getline(cin, type);
-			if (checkForExit(type)) { return; }
-			validateText(type);
+			string type = getValidString();
+			if (type == "") { return; }
 
 			cout << "Thickness: ";
-			while (!(cin >> thickness) || thickness < 0) {
-				cin.clear();
-				if (thickness == 0) { return; }
-				cout << "Invalid input. Please enter a positive thickness: ";
-			}
-			cin.ignore();
-			if (thickness == 0) { return; }
+			double thickness = getValidDouble(); 
+			if (thickness == -1) { return; }
 
 			cout << "Diopter: ";
-			while (!(cin >> diopter)) {
-				cin.clear();
-				cout << "Invalid input. Please enter a valid diopter: ";
-			}
-			cin.ignore();
+			double diopter = getValidDiopter();
+			if (diopter == -1) { return; }
 
 			cout << "Material name: ";
-			getline(cin, materialName);
-			if (checkForExit(materialName)) { return; }
-			validateText(materialName);
+			string materialName = getValidString();
+			if (materialName == "") { return; }
 
 			cout << "Price: ";
-			while (!(cin >> price) || price < 0) {
-				cin.clear();
-				if (price == 0) { return; }
-				cout << "Invalid input. Please enter a positive price: ";
-			}
-			cin.ignore();
-			if (price == 0) { return; }
+			double price = getValidDouble();
+			if (price == -1) { return; }
 
 			Optic optic(type, thickness, diopter, materialName, price);
 			vendor.addOptic(optic);
@@ -330,39 +330,34 @@ public:
 		if (vendors.empty()) { cout << "No available vendors to choose from!\n"; return; }
 
 		cout << "\nChoose a vendor to make an order : ";
-		cout << "\nIf you want to return to the menu just type '0'!";
 		viewVendors(vendors);
 
-		string businessID;
+		cout << "\nIf you want to return to the menu just type 'q'!";
 		cout << "\nEnter the desired vendor's Business ID: ";
-		getline(cin, businessID);
-		if (checkForExit(businessID)) { return; }
-
-		bool validBusinessID = false;
+		
+		string businessID;
 		Vendor* vendorPtr = nullptr;
-		while (!validBusinessID) {
+		while (true) {
+			getline(cin, businessID);
+			if (checkForExit(businessID)) { return; }
+
 			for (auto& v : vendors) {
 				if (v.getBulstat() == businessID) {
-					validBusinessID = true;
 					vendorPtr = &v;
 					break;
 				}
 			}
 
-			if (!(vendorPtr == nullptr)) {
+			if (vendorPtr != nullptr) {
 				if (vendorPtr->getOpticList().empty())
 				{
 					cout << "This vendor has no available optics!";
 					return;
 				}
+				else { break; }
 			}
 
-			if (!validBusinessID)
-			{
-				cout << "Invalid Business ID. Please enter a valid Business ID: ";
-				getline(cin, businessID);
-				if (checkForExit(businessID)) { return; }
-			}
+			cout << "Invalid Business ID. Please enter a valid Business ID: ";
 		}
 		Vendor& vendor = *vendorPtr;
 
@@ -374,40 +369,30 @@ public:
 		}
 
 		Order order(vendor);
-		cout << "\nType the number of the desired optic or type '0' if you want to exit: ";
-		int opticChoice = getValidInteger();
-
-
+		cout << "\nType the number of the desired optic or type 'q' if you want to exit: ";
+		
 		while (true) {
-			if (opticChoice == 0) { break; }
-
-			if (opticChoice > optics.size())
-			{
-				cout << "Invalid number. Try again or type '0' to exit.";
-				opticChoice = getValidInteger();
-				if (opticChoice == 0) { break; }
-			}
+			int opticChoice = getValidInteger();
 
 			Optic optic;
-			for (int i = 0; i < optics.size(); i++) {
-				if (i + 1 == opticChoice)
-				{
-					optic = optics[i];
-				}
+			if (opticChoice > 0 && opticChoice <= optics.size())
+			{
+				optic = optics[opticChoice - 1];
+				cout << "\nYou have selected: \n" << optic;
+				order.addOrderedOptic(optic);
+				cout << "\nType the number of the desired optic or type 'q' if you want to exit: ";
+				continue;
+			}else if (opticChoice==0)
+			{
+				break;
 			}
 
-			order.addOrderedOptic(optic);
-
-			cout << "\nYou have selected: \n" << optic;
-			cout << "\nType the number of the desired optic or type '0' if you want to exit: ";
-			opticChoice = getValidInteger();
+			cout << "Invalid number. Try again or type 'q' to exit.";
 		}
-
 		if (!order.getOrderedOptics().empty())
 		{
 			orders.push_back(order);
 		}
-
 	}
 
 	void viewOrders(vector<Order>& orders) {
@@ -421,13 +406,18 @@ public:
 	}
 
 	void writeToFile(const vector<Vendor>& vendors, const vector<Order>& orders) {
-		ofstream file("data.txt");
+
+		if (vendors.empty() && orders.empty()) {
+			cout << "\nThere is no data available to write!\n";
+			return;
+		}
+
+		ofstream file("data.text");
 		if (!file) {
 			cout << "Error opening file for writing!\n";
 			return;
 		}
 
-		// Write Vendors
 		file << vendors.size() << "\n";
 		for (const auto& v : vendors) {
 			file << v.getBulstat() << '\n';
@@ -446,12 +436,10 @@ public:
 			}
 		}
 
-		// Write Orders
 		file << orders.size() << "\n";
 		for (const auto& order : orders) {
 			file << order.getOrderID() << "\n";
 
-			// Vendor ID
 			file << order.getVendor().getBulstat() << "\n";
 
 			const auto& orderedOptics = order.getOrderedOptics();
@@ -528,7 +516,6 @@ public:
 
 			getline(file, vendorBulstat);
 
-			// Find vendor by bulstat
 			Vendor* vendorPtr = nullptr;
 			for (auto& v : vendors) {
 				if (v.getBulstat() == vendorBulstat) {
@@ -587,14 +574,14 @@ public:
 			<< "5. View Orders\n"
 			<< "6. Write to file\n"
 			<< "7. Read from file\n"
-			<< "0. Exit\n"
+			<< "Q. Exit\n"
 			<< "Type the number of desired action in the terminal: ";
 	}
 	void run() {
 		helloMessage();
 		while (true) {
 			menu();
-			int input = getValidInteger();
+			int input = getValidInteger(); // Returns 0 if 'q' or 'Q' is entered
 			switch (input) {
 			case 1: {
 				// Add Vendor
